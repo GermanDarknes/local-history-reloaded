@@ -1,20 +1,20 @@
 {
-    "name": "local-history",
-    "displayName": "Local History",
-    "description": "Save files into local history",
-    "publisher": "xyz",
-    "version": "1.8.1",
-    "engines": {
-        "vscode": "^1.42.0"
-    },
+    "name": "local-history-reloaded",
+	"displayName": "Local History Reloaded",
+	"description": "Save files into local history",
+    "publisher": "GermanDarknes",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.68.0"
+	},
     "icon": "images/local-history.png",
-    "homepage": "https://github.com/zabel-xyz/local-history",
+    "homepage": "https://github.com/GermanDarknes/local-history-reloaded",
     "repository": {
         "type": "git",
-        "url": "https://github.com/zabel-xyz/local-history.git"
+        "url": "https://github.com/GermanDarknes/local-history-reloaded.git"
     },
     "bugs": {
-        "url": "https://github.com/zabel-xyz/local-history/issues"
+        "url": "https://github.com/GermanDarknes/local-history-reloaded/issues"
     },
     "keywords": [
         "local",
@@ -23,12 +23,12 @@
         "backup",
         "multi-root ready"
     ],
-    "categories": [
-        "Other"
-    ],
-    "activationEvents": [
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
         "*"
-    ],
+	],
     "contributes": {
         "viewsContainers": {
             "activitybar": [
@@ -288,21 +288,33 @@
             }
         }
     },
-    "main": "./out/src/extension",
-    "scripts": {
-        "vscode:prepublish": "tsc -p ./",
-        "compile": "tsc -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install"
-    },
+	"main": "./out/extension.js",
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile && npm run lint",
+		"lint": "eslint src --ext ts",
+		"test": "node ./out/test/runTest.js"
+	},
     "dependencies": {
-        "glob": "7.1.6",
-        "anymatch": "3.1.1",
-        "is-path-inside": "3.0.2",
+        "anymatch": "3.1.2",
+        "glob": "8.0.3",
+        "is-path-inside": "4.0.0",
         "rimraf": "3.0.2"
     },
-    "devDependencies": {
-        "typescript": "3.7.5",
-        "vscode": "1.1.36",
-        "@types/node": "13.7.1"
-    }
+	"devDependencies": {
+		"@types/vscode": "^1.68.0",
+		"@types/glob": "^7.2.0",
+		"@types/mocha": "^9.1.1",
+		"@types/node": "16.x",
+		"@typescript-eslint/eslint-plugin": "^5.30.0",
+		"@typescript-eslint/parser": "^5.30.0",
+		"eslint": "^8.18.0",
+		"glob": "^8.0.3",
+		"mocha": "^10.0.0",
+		"typescript": "^4.7.4",
+		"@vscode/test-electron": "^2.1.5",
+        "@types/rimraf": "^3.0.2"
+	}
 }

@@ -1,10 +1,10 @@
 .vscode/**
-typings/**
-**/.history/**
+.vscode-test/**
 src/**
-**/*.map
 .gitignore
-.gitattributes
-tsconfig.json
-tslint.json
-TODO.TXT
+.yarnrc
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/.eslintrc.json
+**/*.map
+**/*.ts

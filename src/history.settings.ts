@@ -49,8 +49,7 @@ export class HistorySettings {
         // const wsFolder = vscode.workspace.getWorkspaceFolder(file);
         // temporary code to resolve bug https://github.com/Microsoft/vscode/issues/36221
         const wsFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(file.fsPath));
-        if (wsFolder)
-            folder = wsFolder.uri;
+        if (wsFolder) { folder = wsFolder.uri; }
 
         /*
         let folder = vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined;
@@ -63,10 +62,8 @@ export class HistorySettings {
         */
 
         let settings = this.settings.find((value, index, obj) => {
-            if (folder && value.folder)
-                return (value.folder.fsPath === folder.fsPath);
-            else
-                return (folder === value.folder);
+            if (folder && value.folder) { return (value.folder.fsPath === folder.fsPath); }
+            else { return (folder === value.folder); }
         });
         if (!settings) {
             settings = this.read(folder, file, wsFolder);
@@ -96,31 +93,29 @@ export class HistorySettings {
         // let config = vscode.workspace.getConfiguration('local-history', file),
         let config = vscode.workspace.getConfiguration('local-history'),
             enabled = <EHistoryEnabled>config.get('enabled'),
-            exclude =  <string[]>config.get('exclude'),
+            exclude = <string[]>config.get('exclude'),
             historyPath,
             absolute,
             message = '';
 
-        if (typeof enabled === 'boolean')
-            message += 'local-history.enabled must be a number, ';
-        if (typeof exclude === 'string')
-            message += 'local-history.exclude must be an array, ';
-        if (message)
-            vscode.window.showWarningMessage(`Change setting: ${message.slice(0, -2)}`, {}, {title: 'Settings', isCloseAffordance: false, id: 0})
-                .then((action) => {
-                    if (action && action.id === 0)
-                        vscode.commands.executeCommand('workbench.action.openGlobalSettings');
-                });
+        if (typeof enabled === 'boolean') { message += 'local-history.enabled must be a number, '; }
+        if (typeof exclude === 'string') { message += 'local-history.exclude must be an array, '; }
+        if (message) {
+            vscode.window.showWarningMessage(`Change setting: ${message.slice(0, -2)}`, {}, { title: 'Settings', isCloseAffordance: false, id: 0 })
+            .then((action) => {
+                if (action && action.id === 0) { vscode.commands.executeCommand('workbench.action.openGlobalSettings'); }
+            });
+        }
 
         if (enabled !== EHistoryEnabled.Never) {
             historyPath = <string>config.get('path');
             if (historyPath) {
 
                 historyPath = historyPath
-                        // replace variables like %AppData%
-                        .replace(/%([^%]+)%/g, (_, key) => process.env[key])
-                        // supports character ~ for homedir
-                        .replace(/^~/, os.homedir());
+                    // replace variables like %AppData%
+                    .replace(/%([^%]+)%/g, (_, key) => process.env[key])
+                    // supports character ~ for homedir
+                    .replace(/^~/, os.homedir());
 
                 // start with
                 // ${workspaceFolder} => current workspace
@@ -136,28 +131,23 @@ export class HistorySettings {
                         if (wsId) {
                             const find = vscode.workspace.workspaceFolders.find(
                                 wsf => Number.isInteger(wsId - 1) ? wsf.index === Number.parseInt(wsId, 10) : wsf.name === wsId);
-                            if (find)
-                                historyWS = find.uri;
-                            else
-                                vscode.window.showErrorMessage(`workspaceFolder not found ${historyPath}`);
-                        } else
-                            historyWS = workspacefolder;
+                            if (find) { historyWS = find.uri; }
+                            else { vscode.window.showErrorMessage(`workspaceFolder not found ${historyPath}`); }
+                        } else { historyWS = workspacefolder; }
                     }
-                    if (historyWS)
-                        historyPath = historyPath.replace(match[0], historyWS.fsPath);
-                    else
-                        historyPath = null;
+                    if (historyWS) { historyPath = historyPath.replace(match[0], historyWS.fsPath); }
+                    else { historyPath = null; }
                 }
 
                 if (historyPath) {
                     absolute = <boolean>config.get('absolute');
                     if (absolute || (!workspacefolder && enabled === EHistoryEnabled.Always)) {
                         absolute = true;
-                    historyPath = path.join (
-                        historyPath,
-                        '.history');
+                        historyPath = path.join(
+                            historyPath,
+                            '.history');
                     } else if (workspacefolder) {
-                        historyPath = path.join (
+                        historyPath = path.join(
                             historyPath,
                             '.history',
                             (historyWS && this.pathIsInside(workspacefolder.fsPath, historyWS.fsPath) ? '' : path.basename(workspacefolder.fsPath))
@@ -175,8 +165,7 @@ export class HistorySettings {
             }
         }
 
-        if (historyPath)
-            historyPath = historyPath.replace(/\//g, path.sep);
+        if (historyPath) { historyPath = historyPath.replace(/\//g, path.sep); }
 
         return {
             folder: workspacefolder,
@@ -184,7 +173,7 @@ export class HistorySettings {
             saveDelay: <number>config.get('saveDelay') || 0,
             maxDisplay: <number>config.get('maxDisplay') || 10,
             dateLocale: <string>config.get('dateLocale') || undefined,
-            exclude: <string[]>config.get('exclude') || ['**/.history/**','**/.vscode/**','**/node_modules/**','**/typings/**','**/out/**'],
+            exclude: <string[]>config.get('exclude') || ['**/.history/**', '**/.vscode/**', '**/node_modules/**', '**/typings/**', '**/out/**'],
             enabled: historyPath != null && historyPath !== '',
             historyPath: historyPath,
             absolute: absolute
