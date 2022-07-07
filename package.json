@@ -237,7 +237,7 @@
         },
         "configuration": {
             "type": "object",
-            "title": "Local history configuration",
+            "title": "Local History Reloaded",
             "properties": {
                 "local-history.saveDelay": {
                     "type": "number",
