@@ -62,13 +62,19 @@ export class HistorySettings {
         */
 
         let settings = this.settings.find((value, index, obj) => {
-            if (folder && value.folder) { return (value.folder.fsPath === folder.fsPath); }
-            else { return (folder === value.folder); }
+            if (folder && value.folder) {
+                return (value.folder.fsPath === folder.fsPath);
+            }
+            else {
+                return (folder === value.folder);
+            }
         });
+
         if (!settings) {
             settings = this.read(folder, file, wsFolder);
             this.settings.push(settings);
         }
+
         return settings;
     }
 

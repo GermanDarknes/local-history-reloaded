@@ -314,6 +314,10 @@ export default class HistoryTreeProvider implements vscode.TreeDataProvider<Hist
         vscode.commands.executeCommand('vscode.open', file);
     }
 
+    public showEntry(element: HistoryItem): void {
+        if (element.kind === EHistoryTreeItem.file) { vscode.commands.executeCommand('vscode.open', element.file); }
+    }
+
     public showSide(element: HistoryItem): void {
         if (element.kind === EHistoryTreeItem.file) { vscode.commands.executeCommand('vscode.open', element.file, Math.min(vscode.window.activeTextEditor.viewColumn + 1, 3)); }
     }

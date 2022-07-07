@@ -171,18 +171,24 @@ export class HistoryController {
         const settings = this.getSettings(vscode.Uri.file(src));
         const fileProperties = this.decodeFile(src, settings, false);
         if (fileProperties && fileProperties.file) {
-            return new Promise<void>((resolve, reject) => {
-                // Node v.8.5 has fs.copyFile
-                // const fnCopy = fs.copyFile || copyFile;
+            return new Promise(async (resolve, reject) => {
+                try {
+                    let file = vscode.window.visibleTextEditors.filter(e => e.document.uri.fsPath.endsWith(fileProperties.file));
 
-                fs.copyFile(src, fileProperties.file, err => {
-                    if (err) {
-                        return reject(err);
+                    if (file.length === 0) {
+                        return reject('The file needs to be open to be restored.');
                     }
-                    else {
-                        return resolve();
+                    else if (file.length > 1) {
+                        return reject('Found multiple opend files that match the current path. Can\'t restore file.');
                     }
-                });
+
+                    await vscode.workspace.fs.copy(fileName, file[0].document.uri, { overwrite: true });
+                    await vscode.commands.executeCommand('vscode.open', file[0].document.uri);
+                    return resolve(undefined);
+                }
+                catch (err) {
+                    return reject(err);
+                }
             });
         }
     }
@@ -216,9 +222,9 @@ export class HistoryController {
         });
     }
 
-    private internalSaveDocument(document: vscode.TextDocument, settings: IHistorySettings, isOriginal?: boolean, timeout?: Timeout): Promise<vscode.TextDocument | undefined> {
+    private async internalSaveDocument(document: vscode.TextDocument, settings: IHistorySettings, isOriginal?: boolean, timeout?: Timeout): Promise<vscode.TextDocument> {
 
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
 
             let revisionDir;
             if (!settings.absolute) {
@@ -249,8 +255,10 @@ export class HistoryController {
                 nowInfo;
             if (isOriginal) {
                 // find original date (if any)
-                const state = fs.statSync(document.fileName);
-                if (state) { now = state.mtime; }
+                const state = await vscode.workspace.fs.stat(document.uri);
+                if (state) {
+                    now = new Date(state.mtime);
+                }
             }
             // remove 1 sec to original version, to avoid same name as currently version
             now = new Date(now.getTime() - (now.getTimezoneOffset() * 60000) - (isOriginal ? 1000 : 0));
@@ -258,7 +266,7 @@ export class HistoryController {
 
             const revisionFile = this.joinPath(settings.historyPath, revisionDir, p.name, p.ext, `_${nowInfo}`); // toto_20151213215326.js
 
-            if (this.mkDirRecursive(revisionFile) && this.copyFile(document.fileName, revisionFile, timeout)) {
+            if (this.mkDirRecursive(revisionFile) && await this.copyFile(document.uri, revisionFile, timeout)) {
                 if (settings.daysLimit > 0 && !isOriginal) { this.purge(document, settings, revisionPattern); }
                 return resolve(document);
             } else { return reject('Error occured'); }
@@ -372,11 +380,11 @@ export class HistoryController {
 
     private internalOpen(filePath: vscode.Uri, column: number) {
         if (filePath) {
-            return new Promise<void>((resolve, reject) => {
+            return new Promise((resolve, reject) => {
                 vscode.workspace.openTextDocument(filePath)
                     .then(d => {
                         vscode.window.showTextDocument(d, column)
-                            .then(() => resolve(), (err) => reject(err));
+                            .then(() => resolve(undefined), (err) => reject(err));
                     }, (err) => reject(err));
             });
         }
@@ -407,7 +415,9 @@ export class HistoryController {
             if (index) {
                 date = new Date(index[1], index[2] - 1, index[3], index[4], index[5], index[6]);
                 p.name = p.name.substring(0, index.index);
-            } else { return undefined; } // file in history with bad pattern !
+            } else {
+                return undefined;
+            } // file in history with bad pattern !
         }
 
         if (history !== undefined) {
@@ -423,7 +433,7 @@ export class HistoryController {
                     else {
                         p.dir = this.normalizePath(p.dir, false);
                     }
-                } else { // if (history === false)
+                } else {
                     p.dir = path.relative(settings.historyPath, p.dir);
                     if (!settings.absolute) {
                         root = settings.folder.fsPath;
@@ -435,7 +445,9 @@ export class HistoryController {
             }
             file = me.joinPath(root, p.dir, p.name, p.ext, history ? undefined : '');
         }
-        else { file = filePath; }
+        else {
+            file = filePath;
+        }
 
         return {
             dir: p.dir,
@@ -480,9 +492,9 @@ export class HistoryController {
                             return true;
                         }
                     });
-                    resolve();
+                    resolve(undefined);
                 })
-                .catch(() => reject());
+                .catch(() => reject(undefined));
         });
     }
 
@@ -503,7 +515,7 @@ export class HistoryController {
                 for (let file of files) {
                     stat = fs.statSync(file);
                     if (stat && stat.isFile()) {
-                        endTime = stat.birthtime.getTime() + settings.daysLimit * 24 * 60 * 60 * 1000;
+                        endTime = stat.mtime.getTime() + settings.daysLimit * 24 * 60 * 60 * 1000;
                         if (now > endTime) {
                             fs.unlinkSync(file);
                         }
@@ -532,10 +544,10 @@ export class HistoryController {
         }
     }
 
-    private copyFile(source: string, target: string, timeout?: Timeout): boolean {
+    private async copyFile(source: vscode.Uri, target: string, timeout?: Timeout): Promise<boolean> {
         try {
             let buffer;
-            buffer = fs.readFileSync(source);
+            buffer = await vscode.workspace.fs.readFile(source);
 
             if (timeout && timeout.isTimedOut()) {
                 vscode.window.showErrorMessage(`Timeout when copyFile: ' ${source} => ${target}`);
@@ -555,7 +567,7 @@ export class HistoryController {
             return dir.replace(':', '');
         }
         else {
-            return dir.replace('\\', ':\\');
+            return dir;
         }
     }
 }

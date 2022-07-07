@@ -90,6 +90,11 @@
                 "when": false
             },
             {
+                "command": "treeLocalHistory.showEntry",
+                "title": "Open",
+                "when": false
+            },
+            {
                 "command": "treeLocalHistory.showSideEntry",
                 "title": "Open to the side",
                 "when": false
@@ -188,6 +193,11 @@
                 }
             ],
             "view/item/context": [
+                {
+                    "command": "treeLocalHistory.showEntry",
+                    "when": "view == treeLocalHistory && viewItem == localHistoryItem || view == treeLocalHistoryExplorer && viewItem == localHistoryItem",
+                    "group": "1_tree-navigation@1"
+                },
                 {
                     "command": "treeLocalHistory.showSideEntry",
                     "when": "view == treeLocalHistory && viewItem == localHistoryItem || view == treeLocalHistoryExplorer && viewItem == localHistoryItem",

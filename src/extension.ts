@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('treeLocalHistory.forAll', treeProvider.forAll, treeProvider);
     vscode.commands.registerCommand('treeLocalHistory.forSpecificFile', treeProvider.forSpecificFile, treeProvider);
 
-    vscode.commands.registerCommand('treeLocalHistory.showEntry', treeProvider.show, treeProvider);
+    vscode.commands.registerCommand('treeLocalHistory.showEntry', treeProvider.showEntry, treeProvider);
     vscode.commands.registerCommand('treeLocalHistory.showSideEntry', treeProvider.showSide, treeProvider);
     vscode.commands.registerCommand('treeLocalHistory.deleteEntry', treeProvider.delete, treeProvider);
     vscode.commands.registerCommand('treeLocalHistory.compareToCurrentEntry', treeProvider.compareToCurrent, treeProvider);
@@ -42,7 +42,10 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // Create history on save document
-    vscode.workspace.onDidSaveTextDocument(document => {
+    vscode.workspace.onDidSaveTextDocument(async document => {
+        if (await checkIfAlreadySaved(context, document)) {
+            return;
+        }
         controller.saveRevision(document)
             .then ((saveDocument) => {
                 // refresh viewer (if any)
@@ -57,14 +60,27 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     vscode.workspace.onDidChangeConfiguration(configChangedEvent => {
-        if ( configChangedEvent.affectsConfiguration('local-history.treeLocation') )
+        if ( configChangedEvent.affectsConfiguration('local-history.treeLocation') ) {
             treeProvider.initLocation();
-
+        }
         else if ( configChangedEvent.affectsConfiguration('local-history') ) {
             controller.clearSettings();
             treeProvider.refresh();
         }
     });
+}
+
+async function checkIfAlreadySaved(context, document) {
+    let fileName = document.fileName;
+    let currentData = await context.workspaceState.get(fileName);
+    let data = document.getText();
+    let check = currentData && currentData == data;
+
+    if (!check) {
+        await context.workspaceState.update(fileName, data);
+    }
+
+    return check;
 }
 
 // function deactivate() {
